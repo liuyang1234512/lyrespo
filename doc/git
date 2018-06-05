@@ -1,0 +1,34 @@
+pycharm中使用git工具将项目提交到github上
+１）本地安装git工具
+ubuntu:sudo apt install git
+windows:
+https://git-scm.com/download/win
+2)在github上注册账号
+３）打开pycharm工具，设置git命令的位置和github账号
+      (window/ubuntu)ctrl+alt+s : 打开设置页面(File->settings设置)
+      (mac)command+, ： 打开设置页面
+4)在github创建一个仓库
+将仓库的位置： http://sssss/xx.git 复制一下
+５）在项目的根目录下，初始化本地仓库并添加远程仓库
+
+git init
+git remote add origin https://github.com/disenQF/flask-rest.git
+https://github.com/liuyang1234512/lyrespo.git
+git remote add origin https://github.com/liuyang1234512/lyrespo.git
+6)在本地仓库添加文件
+git add . 或者　git add *
+注意：不要添加　.idea 文件目录（包含当前开发工具中相关的环境配置）
+７）提交并推送到 github远程仓库中
+git commit -m ‘初始化提交flask-rest项目’
+
+＃第一次上传是，因为远程仓库不存在master主分支
+git push --set-upstream origin master
+
+#以后再上传时，不使用--set-upstream参数
+git push origin master
+
+8)添加文件之后，（开始跟踪某一文件）－－－－绿色
+可以撤销跟踪：git reset head 文件名或目录名
+
+连接远程仓库
+git clone https://github.com/disenQF/flask-rest.git

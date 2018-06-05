@@ -1,0 +1,174 @@
+　1.Rest接口的写法
+
+    １）请求　－－－－》　　响应
+　       资源　　　　　　　　　结果
+
+资源：uri 类似于路由
+动作:post 新增资源
+    put  修改某一资源（某一属性）
+   patch　修改多个资源（多个属性）
+   delete 删除某一个资源
+   get   查询资源
+
+   响应的结果：json数据
+            jsonify({})   #返回json数据
+            json.dumps(obj, cls) cls自定义JSONEncoder
+
+   如果数据是list[xxxModel]包含了object类对象，则要自定义object转json的
+编码器(JSONEncoder)
+    声明@property def json(self):   return {}
+
+
+2.flask-restful 扩展库
+１）pip3 insatll flask-restful
+2)创建　api 对象：Ａpi(app)
+    from flask_restful import Api
+    api = Api(app)
+3)创建Resource 子类:Resource是flask_restful中的类
+class UserApi(Resource):
+    def get(self):  #rest 的get请求动作
+        pass
+    def post(self):
+        pass
+    def put(self):
+        pass
+    def patch(self):
+        pass
+    def delete(self):
+        pass
+4)将resource资源添加到api对象中
+    api.add_source(UserApi,'/user/',endpoint='user')
+
+3. flask-sqlacodegen  第三方扩展库的使用
+作用：从数据库端，将库中的表生成flask-sqlalchemy相关的模型类
+１)安装　pip3 install flask-sqlacodegen
+2)安装　pip3 install flask-pymysql flask-sqlalchemy
+3)使用flask-sqlacodegen命令导出表的模型
+            mysql+pymysql://root:12345@127.0.0.1:3306/user/
+
+eg:flask-sqlacodegen --outfile models.py
+mysql+pymysql://root:12345@127.0.0.1:3306/users
+
+4)声明 dao.py
+说明　DAO：数据访问对象，封装对所有模型类的　CRUD操作
+a)创建SQLAlchemy对象
+db = SQLAＬchemy(app)
+b)声明相关的函数来实现CRUD的操作
+def query(cla):  #返回BAseQuery对象　　＃查询
+    return db.session.query(cls)
+
+def delete(obj):　　＃删除
+    db.session.delete(obj)
+    db.session.commit()
+
+def add(obj):  # 添加或更新
+    db.session.add(obj)
+    db.session.commit()
+５)在apis.py文件中，导入dao.py和models.py
+
+
+
+
+1.flask-restful
+
+1)rest是一种设计规范，为了实现前后端分离(移动端与服务端分离)的情况。为了适应手机端
+，让请求的数据最小化，最优化。
+提供了资源（Resource）,　URI(统一资源标识符)和　动作等概念。
+
+２）在服务端（flask项目）提供一个apis.py去声明对资源Resource的一种操作。
+
+定义资源：class UserResource(Resource):
+    #from flask_restful import Resource
+
+    #声明相关的动作(get/post/put/delete/patch)
+    def get(self):
+        return {}
+3)为资源添加一个uri
+api=Api(app)   #from flask_restful import Api
+app.add_resource(UserResource,'/user/')
+4)定制输入和输出
+请求解析　
+# from flask_restful import  reqparse
+定制输入：　parser=reqparse.RequestParser()
+# 添加输入(请求)参数的说明
+parser.add_argument('参数名'，type=int/str等, required=True, help='验证失败的消息'，
+    location='参数来源（args,form,files,cookies）')
+#在动作处理函数中，通过parse_args()函数来验证请求参数
+def get(self):
+    args=self.parser.parse_args()   #不满足。则会自动中断请求。
+ ＃满足参数条件，业务的实现
+ xx=args.get('参数名')
+ return  {}
+ #定制输出参数
+ #from flask_restful import marshal_with,marshal,fields
+
+ #声明User列表中每一个元素(User类对象)的输出格式
+ user_fields={'id':fields.Integer,
+                'name':fields.String,
+                'phone':fields.String}
+
+ out_fields = {'msg':fields.String,
+                'data':fields.Nested(user_fields)}
+ １）@marshal_with(fields)  ＃声明输出的字段
+    def get(self):
+    data={'msg':'','data':users}　＃users=[<class User>,<class User>]
+        return data
+  2)marshal(data,fields)
+    def get(self):
+        data = {'msg':'','data':users}
+        return marshal(data,self.out_fields)
+５）文件上传
+前端的核心代码：
+    function uploadImg(file){
+        var formdata = new Formdata()  #默认为multipart/form-data
+        formdata.append('参数名',file)  #file是js的文件类对象
+
+        ＃
+        $.ajax('/upload/',{
+            type:'post',
+            data:formdata,
+            contentType:False, // 表示对上传的数据不做任何的编码处理
+            processData:false, // 同上，不作任何的数据处理
+            dataType:'json',
+            success:function(data){
+                //数据处理成功或文件上传成功后的回调函数。
+            }
+        });
+    }
+
+后端的核心代码：
+#from werkzeug.datastructures import  FileStorage
+    class UploadApi(Resource):
+    parser = reqparse.RequestPareser()
+    parser.add_argument('img', type=FileStorage,location='files')
+    def post(def):
+        args = self.parser.parse_args()
+
+        uFile =args.get('img')
+        #将上传的文件保存到服务器的指定文件目录中
+        uFile.save('/user/liuyang/uploads/'+uFilename)
+        return {}
+
+        扩展：在settings.py文件中。设计BASE_DIR/STATIC_DIR/MEDIA_DIR的路径。
+        1)获取settings.py文件的绝对路径：
+        base_dir=os.path.abspath(__name__)
+        2)获取settings.py所在目录
+        basedir=os.path.dirname(abspath)
+        3)获取settings.py所在目录的static目录
+        static_dir = os.path.join(base_dir,'static')
+        4）相对于settings.py所在目录的static目录的uploads位置
+        media_dir=os.path.join(static_dir,'uploads')
+
+
+
+
+git checkout -b v1.1
+创建分支，同时切换分支。
+git add
+git  commit -m 'high.py'
+git push --set--upstream,use
+git pull
+
+
+
+

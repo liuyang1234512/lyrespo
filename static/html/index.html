@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>主页</title>
+</head>
+<body>
+<form>
+    <input name="name" placeholder="用户名"><br>
+    <input name="phone" placeholder="手机号"><br>
+    <button type="button" onclick="addUser()">添加</button>
+</form>
+<hr>
+<div><ul id="userData"></ul></div>
+<h3>查询用户</h3>
+<input id="searchKey" name="key" placeholder="查询用户的id或phone或name">
+<button type="button" onclick="searchUser(searchKey.value)">查询</button>
+
+<hr>
+<div id="updateDiv">
+<h3>变更用户</h3>
+    <form id="updateForm">
+        <input  type="hidden" name="id">
+        <input name="name" placeholder="用户名"><br>
+        <input name="phone" placeholder="手机号"><br>
+        <button type="button" onclick="updateUser()">更新用户</button>
+    </form>
+</div>
+<div>
+    <ul id="userData"></ul>
+</div>
+
+<script src="/static/js/jquery.min.js"></script>
+<script>
+    $(function () {
+        queryAll()
+        $('#updateDiv').hide();
+    })
+    function searchUser(key) {
+        alert('waiting dev!'+key);
+
+        $.getJSON('/user/?key='+key,function (data) {
+            alert(data.msg);
+            if(data.state=='ok'){
+                $('#updateDiv').fadeIn(1000);
+
+                //查询的结果显示
+                $('#updateForm>input[name="id"]').val(data.data.id);
+                $('#updateForm>input[name="name"]').val(data.data.name);
+                $('#updateForm>input[name="phone"]').val(data.data.phone);
+
+            }
+        })
+    }
+    function updateUser() {
+        $.ajax('/user/',{
+            type:'put',
+            data:$('#updateForm').serialize(),
+            dataType:'json',
+            success:function (data) {
+                alert(data.msg);
+
+                queryAll();
+            }
+        })
+
+    }
+    function queryAll() {
+        $.getJSON('/user/', function (data) {
+            if (data.state == 'ok') {
+                 $('#userData').html('');  //清空原内容
+                for (var i = 0; i < data.data.length; i++) {
+                    user = data.data[i];
+                    $('#userData')
+                        .append("<li>" + user.name + ":" + user.phone + "<button onclick='delUser("+user.id+")'>删除</button></li>");
+                }
+            }
+        })
+    }
+
+    function delUser(id) {
+        $.ajax('/user/?id='+id,{
+            type:'delete',
+            dataType:'json',
+            success:function (data) {
+                alert(data.msg);
+                queryAll()  //重新加载
+            }
+        });
+
+
+
+    }
+
+    function addUser() {
+        // 通过ajax方式上传表单数据
+        $.ajax('/user/',{
+            type:'POST',
+            data: $('form').serialize(),
+            dataType: 'json',  // 响应的数据类型
+            success: function (data) {
+                // data - > {state:'ok', msg:'添加成功'}
+                alert(data.msg);
+
+                queryAll();
+            }
+
+        })
+    }
+</script>
+</body>
+</html>
